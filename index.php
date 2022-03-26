@@ -28,7 +28,7 @@
     </tr>
     <tr><center>
       <?php if(!isset($_SESSION['username'])): ?>
-      <P>You are mot currently signed in <a href="login.php">Login</a>. Not yet a member? <a href="signup.php">Register.</a> </P>
+      <P>You are not currently signed in <a href="login.php">Login</a>. Not yet a member? <a href="signup.php">Register.</a> </P>
       <?php else: ?>
       <p>You are logged in as <?php if(isset($_SESSION['username'])) echo $_SESSION['username']; ?> <a href="logout.php">Logout</a> </p>
       <?php endif ?>
