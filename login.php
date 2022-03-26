@@ -150,9 +150,10 @@ if(isset($_POST['loginBtn'])){
   <h1 style="color:blue"><center>Welcome to the LDC Registration System</center></h1>
   <hr class="new1">
 
-<?php if(isset($result)) echo $result; ?>
-<?php if(!empty($errorArray)) echo show_errors($errorArray); ?>
+  <?php if(isset($result)) echo $result; ?>
+  <?php if(!empty($errorArray)) echo show_errors($errorArray); ?>
 
+  <center><img src = "register.jpg" alt = "City View" width="430" height="100" /></center>
 <div class="form-style-6">
   <h1>Login</h1>
   <form  method="post" action="">
