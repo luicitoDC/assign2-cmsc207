@@ -1,62 +1,64 @@
 <?php
-//add our database connection script
+//Include the database connection scripts
 include_once 'resource/Database.php';
 include_once 'resource/utilities.php';
 
-//process the form if the reset password button is clicked
+//Process the values in the form if the user clicked the button for reset password
 if(isset($_POST['passwordResetBtn'])){
-    //initialize an array to store any error message from the form
-    $form_errors = array();
+    //Initialize the array that will be used to hold any error message from the form
+    $errorArray = array();
 
-    //Form validation
-    $required_fields = array('email', 'new_password', 'confirm_password');
+    //Perform form validation
+    $requiredFields = array('email', 'new_password', 'confirm_password');
 
-    //call the function to check empty field and merge the return data into form_error array
-    $form_errors = array_merge($form_errors, check_empty_fields($required_fields));
+    //Inspect empty field and combine the return data in the errorArray array
+    $errorArray = array_merge($errorArray, check_empty_fields($requiredFields));
 
-    //Fields that requires checking for minimum length
-    $fields_to_check_length = array('new_password' => 6, 'confirm_password' => 6);
+    //Check if the password meets the required minimum length
+    $fieldsLengthChecked = array('new_password' => 6, 'confirm_password' => 6);
 
-    //call the function to check minimum required length and merge the return data into form_error array
-    $form_errors = array_merge($form_errors, check_min_length($fields_to_check_length));
+    //Inspect the minimum required length and merge the return data in the errorArray array
+    $errorArray = array_merge($errorArray, check_min_length($fieldsLengthChecked));
 
-    //email validation / merge the return data into form_error array
-    $form_errors = array_merge($form_errors, check_email($_POST));
+    //Perform validation of the email and append the results in the errorArray array
+    $errorArray = array_merge($errorArray, check_email($_POST));
 
-    //check if error array is empty, if yes process form data and insert record
-    if(empty($form_errors)){
-        //collect form data and store in variables
+    //Inspect if no error is present; then process the data in the form and insert record if there's no error
+    if(empty($errorArray)){
+        //Gather the data in the form and create variables to store them
         $email = $_POST['email'];
         $password1 = $_POST['new_password'];
         $password2 = $_POST['confirm_password'];
 
-        //check if new password and confirm password is same
+        //Check the new password and check if the same with the confirm password
         if($password1 != $password2){
             $result = "<p style='padding:20px; border: 1px solid gray; color: red;'> New password and confirm password does not match</p>";
         }else{
             try{
-                //create SQL select statement to verify if email address input exist in the database
+
+                //Check if the inputted email address exixts in the databse
                 $sqlQuery = "SELECT email FROM users WHERE email =:email";
 
-                //use PDO prepared to sanitize data
+                //Sanitize the data using PDO
                 $statement = $db->prepare($sqlQuery);
 
-                //execute the query
+                //Run the query
                 $statement->execute(array(':email' => $email));
 
-                //check if record exist
+                //Inspect if the record exists in the database
                 if($statement->rowCount() == 1){
-                    //hash the password
-                    $hashed_password = password_hash($password1, PASSWORD_DEFAULT);
 
-                    //SQL statement to update password
+                    //Perform password hashing
+                    $securePassword = password_hash($password1, PASSWORD_DEFAULT);
+
+                    //Update the password in the database
                     $sqlUpdate = "UPDATE users SET password =:password WHERE email=:email";
 
-                    //use PDO prepared to sanitize SQL statement
+                    //Sanitize SQL statement using PDO
                     $statement = $db->prepare($sqlUpdate);
 
-                    //execute the statement
-                    $statement->execute(array(':password' => $hashed_password, ':email' => $email));
+                    //Run the statement
+                    $statement->execute(array(':password' => $securePassword, ':email' => $email));
 
                     $result = "<p style='padding:20px; border: 1px solid gray; color: green;'> Password Reset Successful</p>";
                 }
@@ -70,10 +72,10 @@ if(isset($_POST['passwordResetBtn'])){
         }
     }
     else{
-        if(count($form_errors) == 1){
+        if(count($errorArray) == 1){
             $result = "<p style='color: red;'> There was 1 error in the form<br>";
         }else{
-            $result = "<p style='color: red;'> There were " .count($form_errors). " errors in the form <br>";
+            $result = "<p style='color: red;'> There were " .count($errorArray). " errors in the form <br>";
         }
     }
 }
@@ -83,23 +85,125 @@ if(isset($_POST['passwordResetBtn'])){
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Password Reset Page</title>
+    <title>Luicito dela Cruz's Homepage</title>
+
+    <style type="text/css">
+    .form-style-6{
+    	font: 95% Arial, Helvetica, sans-serif;
+    	max-width: 400px;
+    	margin: 10px auto;
+    	padding: 16px;
+    	background: #F7F7F7;
+    }
+    .form-style-6 h1{
+    	background: #43D1AF;
+    	padding: 20px 0;
+    	font-size: 140%;
+    	font-weight: 300;
+    	text-align: center;
+    	color: #fff;
+    	margin: -16px -16px 16px -16px;
+    }
+    .form-style-6 input[type="text"],
+    .form-style-6 input[type="date"],
+    .form-style-6 input[type="datetime"],
+    .form-style-6 input[type="email"],
+    .form-style-6 input[type="number"],
+    .form-style-6 input[type="search"],
+    .form-style-6 input[type="time"],
+    .form-style-6 input[type="url"],
+    .form-style-6 input[type="password"],
+    .form-style-6 textarea,
+    .form-style-6 select
+    {
+    	-webkit-transition: all 0.30s ease-in-out;
+    	-moz-transition: all 0.30s ease-in-out;
+    	-ms-transition: all 0.30s ease-in-out;
+    	-o-transition: all 0.30s ease-in-out;
+    	outline: none;
+    	box-sizing: border-box;
+    	-webkit-box-sizing: border-box;
+    	-moz-box-sizing: border-box;
+    	width: 100%;
+    	background: #fff;
+    	margin-bottom: 4%;
+    	border: 1px solid #ccc;
+    	padding: 3%;
+    	color: #555;
+    	font: 95% Arial, Helvetica, sans-serif;
+    }
+    .form-style-6 input[type="text"]:focus,
+    .form-style-6 input[type="date"]:focus,
+    .form-style-6 input[type="datetime"]:focus,
+    .form-style-6 input[type="email"]:focus,
+    .form-style-6 input[type="number"]:focus,
+    .form-style-6 input[type="search"]:focus,
+    .form-style-6 input[type="time"]:focus,
+    .form-style-6 input[type="url"]:focus,
+    .form-style-6 input[type="password"]:focus,
+    .form-style-6 textarea:focus,
+    .form-style-6 select:focus
+    {
+    	box-shadow: 0 0 5px #43D1AF;
+    	padding: 3%;
+    	border: 1px solid #43D1AF;
+    }
+
+    .form-style-6 input[type="submit"],
+    .form-style-6 input[type="button"]{
+    	box-sizing: border-box;
+    	-webkit-box-sizing: border-box;
+    	-moz-box-sizing: border-box;
+    	width: 100%;
+    	padding: 3%;
+    	background: #43D1AF;
+    	border-bottom: 2px solid #30C29E;
+    	border-top-style: none;
+    	border-right-style: none;
+    	border-left-style: none;
+    	color: #fff;
+    }
+    .form-style-6 input[type="submit"]:hover,
+    .form-style-6 input[type="button"]:hover{
+    	background: #2EBC99;
+    }
+    hr.new2 {
+      border: 1px solid green;
+      border-radius: 5px;
+    }
+    hr.new1 {
+      border: 3px solid green;
+      border-radius: 5px;
+    }
+    </style>
+
 </head>
 <body style = "background-color:cyan;">
-<h2>User Authentication System </h2><hr>
-
-<h3>Password Reset Form</h3>
+  <hr class="new1">
+  <h1 style="color:blue"><center>Welcome to the LDC Registration System</center></h1>
+  <hr class="new1">
 
 <?php if(isset($result)) echo $result; ?>
-<?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
-<form method="post" action="">
-    <table>
-        <tr><td>Email:</td> <td><input type="text" value="" name="email"></td></tr>
-        <tr><td>New Password:</td> <td><input type="password" value="" name="new_password"></td></tr>
-        <tr><td>Confirm Password:</td> <td><input type="password" value="" name="confirm_password"></td></tr>
-        <tr><td></td><td><input style="float: right;" type="submit" name="passwordResetBtn" value="Reset Password"></td></tr>
-    </table>
-</form>
-<p><a href="index.php">Back</a> </p>
+<?php if(!empty($errorArray)) echo show_errors($errorArray); ?>
+
+
+<center><img src = "register.jpg" alt = "City View" width="430" height="100" /></center>
+<div class="form-style-6">
+  <h1>Password Reset Form</h1>
+  <form  method="post" action="">
+  <br /><br />
+  <input type="text" name="email" placeholder="Email Address" />
+  <input type="password" name="new_password" placeholder="New Password" />
+  <input type="password" name="confirm_password" placeholder="Confirm Password" />
+  <br /><br /><br />
+  <input style="float: right;" type="submit" name="passwordResetBtn" value="Reset Password" />
+  </form>
+  <br /><br />
+  <hr class="new2"/>
+  <p align = "center">
+    <a href="index.php">Back</a>
+  </p>
+</div>
+
 </body>
 </html>
