@@ -1,55 +1,50 @@
 <?php
-//Include the database connection script
+//add our database connection script
 include_once 'resource/Database.php';
 include_once 'resource/utilities.php';
 
-//Process the information contained in the form
+//process the form
 if(isset($_POST['signupBtn'])){
+    //initialize an array to store any error message from the form
+    $form_errors = array();
 
-    //Create an array to hold any error message from the form
-    $errorArray = array();
+    //Form validation
+    $required_fields = array('email', 'username', 'password');
 
-    //Perform validation of the form
-    $requiredFields = array('email', 'firstname', 'lastname', 'phone', 'username', 'password');
+    //call the function to check empty field and merge the return data into form_error array
+    $form_errors = array_merge($form_errors, check_empty_fields($required_fields));
 
-    //Run the function to inspect empty field and combine the output data into an array
-    $errorArray = array_merge($errorArray, check_empty_fields($requiredFields));
+    //Fields that requires checking for minimum length
+    $fields_to_check_length = array('username' => 4, 'password' => 6);
 
-    //Inspect the fields that require checking for minimum length
-    $fieldsLengthChecked = array('username' => 4, 'password' => 6);
+    //call the function to check minimum required length and merge the return data into form_error array
+    $form_errors = array_merge($form_errors, check_min_length($fields_to_check_length));
 
-    //Run the function to inspect minimum required length and combine the return data into an array
-    $errorArray = array_merge($errorArray, check_min_length($fieldsLengthChecked));
+    //email validation / merge the return data into form_error array
+    $form_errors = array_merge($form_errors, check_email($_POST));
 
-    //Perform email validation and combine the return data into an array
-    $errorArray = array_merge($errorArray, check_email($_POST));
-
-    //Inspect if error array is empty, and process the form data and insert record if it is indeed empty
-    if(empty($errorArray)){
-
-        //Gather form data and hold in variables
+    //check if error array is empty, if yes process form data and insert record
+    if(empty($form_errors)){
+        //collect form data and store in variables
         $email = $_POST['email'];
-        $firstname = $_POST['firstname'];
-        $lastname = $_POST['lastname'];
-        $phone = $_POST['phone'];
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        //Perform password hashing
+        //hashing the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         try{
 
-            //Create SQL insert statement
-            $sqlInsert = "INSERT INTO users (email, firstname, lastname, phone, username, password, join_date)
-              VALUES (:email, :firstname, :lastname, :phone, :username, :password, now())";
+            //create SQL insert statement
+            $sqlInsert = "INSERT INTO users (username, email, password, join_date)
+              VALUES (:username, :email, :password, now())";
 
-            //Sanitize the data using PDO
+            //use PDO prepared to sanitize data
             $statement = $db->prepare($sqlInsert);
 
-            //STore the data in the database
-            $statement->execute(array(':email' => $email, ':firstname' => $firstname, ':lastname' => $lastname, ':phone' => $phone, ':username' => $username, ':password' => $hashed_password));
+            //add the data into the database
+            $statement->execute(array(':username' => $username, ':email' => $email, ':password' => $hashed_password));
 
-            //Inspect if a new row was created
+            //check if one new row was created
             if($statement->rowCount() == 1){
                 $result = "<p style='padding:20px; border: 1px solid gray; color: green;'> Registration Successful</p>";
             }
@@ -58,10 +53,10 @@ if(isset($_POST['signupBtn'])){
         }
     }
     else{
-        if(count($errorArray) == 1){
+        if(count($form_errors) == 1){
             $result = "<p style='color: red;'> There was 1 error in the form<br>";
         }else{
-            $result = "<p style='color: red;'> There were " .count($errorArray). " errors in the form <br>";
+            $result = "<p style='color: red;'> There were " .count($form_errors). " errors in the form <br>";
         }
     }
 
@@ -72,39 +67,23 @@ if(isset($_POST['signupBtn'])){
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Luicito dela Cruz's Homepage</title>
-
-    <style>
-    hr.new1 {
-      border: 3px solid green;
-      border-radius: 5px;
-    }
-    </style>
-
+    <title>Register Page</title>
 </head>
 <body style = "background-color:cyan;">
-  <hr class="new1">
-  <h1 style="color:blue"><center>Welcome to the LDC Registration System</center></h1>
-  <hr class="new1">
+<h2>User Authentication System </h2><hr>
+
+<h3>Registration Form</h3>
 
 <?php if(isset($result)) echo $result; ?>
-<?php if(!empty($errorArray)) echo show_errors($errorArray); ?>
-<center>
-  <form method="post" action="">
-      <table bgcolor="white">
-        <tr><img src = "register.jpg" alt = "City View" width="392" height="100" /></tr>
-          <tr><td></td><td><h3>Registration Form</h2></td><td></td></tr>
-          <tr><td>Email:</td> <td><input type="text" value="" name="email"></td></tr>
-          <tr><td>First Name:</td> <td><input type="text" value="" name="firstname"></td></tr>
-          <tr><td>Last Name:</td> <td><input type="text" value="" name="lastname"></td></tr>
-          <tr><td>Telephone Number:</td> <td><input type="text" value="" name="phone"></td></tr>
-          <tr><td>Username:</td> <td><input type="text" value="" name="username"></td></tr>
-          <tr><td>Password:</td> <td><input type="password" value="" name="password"></td></tr>
-          <tr><td></td><td><input style="float: right;" type="submit" name="signupBtn" value="Signup"></td></tr>
-      </table>
-  </form>
-</center>
-
-<p align = "center"><a href="index.php">Back</a> </p>
+<?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
+<form method="post" action="">
+    <table>
+        <tr><td>Email:</td> <td><input type="text" value="" name="email"></td></tr>
+        <tr><td>Username:</td> <td><input type="text" value="" name="username"></td></tr>
+        <tr><td>Password:</td> <td><input type="password" value="" name="password"></td></tr>
+        <tr><td></td><td><input style="float: right;" type="submit" name="signupBtn" value="Signup"></td></tr>
+    </table>
+</form>
+<p><a href="index.php">Back</a> </p>
 </body>
 </html>
